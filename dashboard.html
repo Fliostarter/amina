@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KokoDAGCoin Live Dashboard</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef1f5;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .metric-title {
+      font-size: 16px;
+      color: #666;
+    }
+
+    .metric-value {
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 5px;
+      color: #111;
+    }
+
+    .tx-box {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
+
+  <script>
+    async function updateDashboard() {
+      try {
+        const response = await fetch('/chain');
+        const data = await response.json();
+        
+        const blocks = data.chain;
+        const length = data.length;
+
+        document.getElementById("num_blocks").innerText = length;
+
+        if (length >= 2) {
+          const last = blocks[length - 1];
+          const prev = blocks[length - 2];
+
+          const txCount = last.transactions.length;
+          document.getElementById("last_tx_count").innerText = txCount;
+
+          const elapsed = last.timestamp - prev.timestamp;
+          const tps = txCount / (elapsed || 1);
+          document.getElementById("tps").innerText = tps.toFixed(2);
+
+          // Show last 5 transactions
+          let htmlTx = "";
+          last.transactions.slice(-5).forEach(tx => {
+            htmlTx += `<div class="tx-box">From: ${tx.sender}<br>To: ${tx.receiver}<br>Amount: ${tx.amount}</div>`;
+          });
+          document.getElementById("last_transactions").innerHTML = htmlTx;
+
+        }
+      } catch (err) {
+        console.log("Error updating dashboard:", err);
+      }
+    }
+
+    setInterval(updateDashboard, 1000); // Update every second
+    window.onload = updateDashboard;
+  </script>
+
+</head>
+
+<body>
+
+  <h1>Koko DAG Coin — Live Dashboard</h1>
+
+  <div class="container">
+
+    <div class="card">
+      <div class="metric-title">Number of Blocks</div>
+      <div class="metric-value" id="num_blocks">Loading...</div>
+    </div>
+
+    <div class="card">
+      <div class="metric-title">Transactions in Last Block</div>
+      <div class="metric-value" id="last_tx_count">Loading...</div>
+    </div>
+
+    <div class="card">
+      <div class="metric-title">TPS (Live Estimate)</div>
+      <div class="metric-value" id="tps">Loading...</div>
+    </div>
+
+    <div class="card">
+      <h3>Last Block Transactions</h3>
+      <div id="last_transactions">Loading...</div>
+    </div>
+
+  </div>
+
+  <footer>
+    KokoDAGCoin © 2025 — Ultra Fast DAG Blockchain
+  </footer>
+
+</body>
+</html>
